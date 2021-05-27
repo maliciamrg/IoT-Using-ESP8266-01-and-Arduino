@@ -9,61 +9,6 @@ int redLED =12;                                     //assign a variable named "r
 int blueLED =11;                                    //assign a variable named "blueLED" with an integer value 11, it refers to the pin which the blue LED is connected on.
 
 
-void setup()
-
-{
-  pinMode(redLED,OUTPUT);                           //set the pin number 12 as an output pin.
-  pinMode(blueLED,OUTPUT);                          //set the pin number 11 as an output pin.
-  
-  digitalWrite(redLED,HIGH);                         //turn the red LED off at the beginning of the program.
-  digitalWrite(blueLED,HIGH);                       //turn the blue LED on at the beginning of the program.
-  delay(1000);
-  
-  digitalWrite(redLED,LOW);                         //turn the red LED off at the beginning of the program.
-  digitalWrite(blueLED,HIGH);                       //turn the blue LED on at the beginning of the program.
-  delay(1000);
-
-  Serial.begin(serialCommunicationSpeed);           //begin the Hardware serial communication (0, 1) at speed 9600.
-  esp8266.begin(serialCommunicationSpeed);          //begin the software serial communication (2, 3) at speed 9600.
-
-  Serial.println("start");
-
-  InitWifiModule();                                 //call this user-defined function "InitWifiModule()" to initialize a communication between the ESP8266 and your access point (Home Router or even your mobile hotspot).
-
-  digitalWrite(blueLED,LOW);                        //after finishing the initialization successfully, turn off the blue LED (just an indicator).
-  delay(1000);
-}
-
-void loop()                                                         //our main program, some fun are about to start)
-{
-
-  if(esp8266.available())                                           //if there's any data received and stored in the serial receive buffer, go and excute the if-condition body. If not, dont excute the if-condition body at all.
-  {
-    if(esp8266.find("+IPD,"))                                       //search for the "+IPD," string in the incoming data. if it exists the ".find()" returns true and if not it returns false.
-    {
-      delay(1000);                                                  //wait 1 second to fill up the buffer with the data.
-      int connectionId = esp8266.read()-48;                         //Subtract 48 because the read() function returns the ASCII decimal value. And 0 (the first decimal number) starts at 48. We use it to convert from ASCI decimal value to a character value.
-      esp8266.find("pin=");                                         //Advance the cursor to the "pin=" part in the request header to read the incoming bytes after the "pin=" part which is the pinNumer and it's state.
-      int pinNumber = (esp8266.read()-48)*10;                       //read the first Byte from the Arduino input buffer(i.e. if the pin 12 then the 1st number is 1) then multiply this number by 10. So, the final value of the "pinNumber" variable will be 10.
-      pinNumber = pinNumber + (esp8266.read()-48);                  //read the second Byte from the Arduino input buffer(i.e. if the pin number is 12 then the 2nd number is 2) then add this number to the first number. So, the final value of the "pinNumber" variable will be 12.
-      int statusLed =(esp8266.read()-48);                           //read the third byte from the Arduino input buffer. then save it inside the "statusLed" variable. At any case, it will be 1 or 0.
-
-      digitalWrite(pinNumber, statusLed);                           //then turn the LED at "pinNumber" on or off depending on the "statusLed" variable value.
-
-      Serial.println(connectionId);                                 //print the "connectionId" value on the serial monitor for debugging purposes.
-      Serial.print(pinNumber);                                      //print the "pinNumber" value on the serial monitor for debugging purposes.
-      Serial.print("      ");                                       //print some spaces on the serial monitor to make it more readable.
-      Serial.println(statusLed);                                    //print the "statusLed" value on the serial monitor for debugging purposes.
-
-      String closeCommand = "AT+CIPCLOSE=";                         //close the TCP/IP connection.
-      closeCommand+=connectionId;                                   //append the "connectionId" value to the string.
-      closeCommand+="\r\n";                                         //append the "\r\n" to the string. it simulates the keyboard enter press.
-      sendData(closeCommand,1000,DEBUG);                            //then send this command to the ESP8266 module to excute it.
-      
-    }
-  }
-}
-
 /******************************************************************************************************************************************************************************************
 * Name: sendData
 * Description: this Function regulates how the AT Commands will ge sent to the ESP8266.
@@ -118,4 +63,59 @@ void InitWifiModule()
   sendData("AT+CIPMUX=1\r\n", 1500, DEBUG);                                             //Multiple conections.
   delay (1500);
   sendData("AT+CIPSERVER=1,80\r\n", 1500, DEBUG);                                       //start the communication at port 80, port 80 used to communicate with the web servers through the http requests.
+}
+
+void setup()
+
+{
+  pinMode(redLED,OUTPUT);                           //set the pin number 12 as an output pin.
+  pinMode(blueLED,OUTPUT);                          //set the pin number 11 as an output pin.
+  
+  digitalWrite(redLED,HIGH);                         //turn the red LED off at the beginning of the program.
+  digitalWrite(blueLED,HIGH);                       //turn the blue LED on at the beginning of the program.
+  delay(1000);
+  
+  digitalWrite(redLED,LOW);                         //turn the red LED off at the beginning of the program.
+  digitalWrite(blueLED,HIGH);                       //turn the blue LED on at the beginning of the program.
+  delay(1000);
+
+  Serial.begin(serialCommunicationSpeed);           //begin the Hardware serial communication (0, 1) at speed 9600.
+  esp8266.begin(serialCommunicationSpeed);          //begin the software serial communication (2, 3) at speed 9600.
+
+  Serial.println("start");
+
+  InitWifiModule();                                 //call this user-defined function "InitWifiModule()" to initialize a communication between the ESP8266 and your access point (Home Router or even your mobile hotspot).
+
+  digitalWrite(blueLED,LOW);                        //after finishing the initialization successfully, turn off the blue LED (just an indicator).
+  delay(1000);
+}
+
+void loop()                                                         //our main program, some fun are about to start)
+{
+
+  if(esp8266.available())                                           //if there's any data received and stored in the serial receive buffer, go and excute the if-condition body. If not, dont excute the if-condition body at all.
+  {
+    if(esp8266.find("+IPD,"))                                       //search for the "+IPD," string in the incoming data. if it exists the ".find()" returns true and if not it returns false.
+    {
+      delay(1000);                                                  //wait 1 second to fill up the buffer with the data.
+      int connectionId = esp8266.read()-48;                         //Subtract 48 because the read() function returns the ASCII decimal value. And 0 (the first decimal number) starts at 48. We use it to convert from ASCI decimal value to a character value.
+      esp8266.find("pin=");                                         //Advance the cursor to the "pin=" part in the request header to read the incoming bytes after the "pin=" part which is the pinNumer and it's state.
+      int pinNumber = (esp8266.read()-48)*10;                       //read the first Byte from the Arduino input buffer(i.e. if the pin 12 then the 1st number is 1) then multiply this number by 10. So, the final value of the "pinNumber" variable will be 10.
+      pinNumber = pinNumber + (esp8266.read()-48);                  //read the second Byte from the Arduino input buffer(i.e. if the pin number is 12 then the 2nd number is 2) then add this number to the first number. So, the final value of the "pinNumber" variable will be 12.
+      int statusLed =(esp8266.read()-48);                           //read the third byte from the Arduino input buffer. then save it inside the "statusLed" variable. At any case, it will be 1 or 0.
+
+      digitalWrite(pinNumber, statusLed);                           //then turn the LED at "pinNumber" on or off depending on the "statusLed" variable value.
+
+      Serial.println(connectionId);                                 //print the "connectionId" value on the serial monitor for debugging purposes.
+      Serial.print(pinNumber);                                      //print the "pinNumber" value on the serial monitor for debugging purposes.
+      Serial.print("      ");                                       //print some spaces on the serial monitor to make it more readable.
+      Serial.println(statusLed);                                    //print the "statusLed" value on the serial monitor for debugging purposes.
+
+      String closeCommand = "AT+CIPCLOSE=";                         //close the TCP/IP connection.
+      closeCommand+=connectionId;                                   //append the "connectionId" value to the string.
+      closeCommand+="\r\n";                                         //append the "\r\n" to the string. it simulates the keyboard enter press.
+      sendData(closeCommand,1000,DEBUG);                            //then send this command to the ESP8266 module to excute it.
+      
+    }
+  }
 }
