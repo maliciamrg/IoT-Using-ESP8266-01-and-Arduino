@@ -9,6 +9,60 @@ SoftwareSerial esp8266(2,3);                        //set the Rx ==> Pin 2; TX =
 int redLED =12;                                     //assign a variable named "redLED" with an integer value 12, it refers to the pin which the red LED is connected on.
 int blueLED =11;                                    //assign a variable named "blueLED" with an integer value 11, it refers to the pin which the blue LED is connected on.
 
+/******************************************************************************************************************************************************************************************
+* Name: sendData
+* Description: this Function regulates how the AT Commands will ge sent to the ESP8266.
+* 
+* Params: command - the AT Command to send 
+*                 - timeout - the time to wait for a response 
+*                 - debug - print to Serial window?(true = yes, false = no)
+*                 
+* Returns: The response from the esp8266 (if there is a reponse)
+*/
+String sendData(String command, const int timeout, boolean debug)
+{
+    String response = "";                                             //initialize a String variable named "response". we will use it later.
+    
+    esp8266.print(command);                                           //send the AT command to the esp8266 (from ARDUINO to ESP8266).
+    long int time = millis();                                         //get the operating time at this specific moment and save it inside the "time" variable.
+    while( (time+timeout) > millis())                                 //excute only whitin 1 second.
+    {      
+      while(esp8266.available())                                      //is there any response came from the ESP8266 and saved in the Arduino input buffer?
+      {
+        char c = esp8266.read();                                      //if yes, read the next character from the input buffer and save it in the "response" String variable.
+        response+=c;                                                  //append the next character to the response variabl. at the end we will get a string(array of characters) contains the response.
+      }  
+    }    
+    if(debug)                                                         //if the "debug" variable value is TRUE, print the response on the Serial monitor.
+    {
+      Serial.print(response);
+    }    
+    return response;                                                  //return the String response.
+}
+
+/******************************************************************************************************************************************************************************************
+* Name: InitWifiModule
+* Description: this Function gives the commands that we need to send to the sendData() function to send it.
+* 
+* Params: Nothing.
+*                 
+* Returns: Nothing (void).
+*/
+void InitWifiModule()
+{
+  sendData("AT+RST\r\n", 2000, DEBUG);                                                  //reset the ESP8266 module.
+  //delay(1000);
+  sendData("AT+CWJAP=\"Decoder\",\"1241997GoGo\"\r\n", 2000, DEBUG);        //connect to the WiFi network.
+  delay (3000);
+  sendData("AT+CWMODE=1\r\n", 1500, DEBUG);                                             //set the ESP8266 WiFi mode to station mode.
+  delay (1500);
+  sendData("AT+CIFSR\r\n", 1500, DEBUG);                                                //Show IP Address, and the MAC Address.
+  delay (1500);
+  sendData("AT+CIPMUX=1\r\n", 1500, DEBUG);                                             //Multiple conections.
+  delay (1500);
+  sendData("AT+CIPSERVER=1,80\r\n", 1500, DEBUG);                                       //start the communication at port 80, port 80 used to communicate with the web servers through the http requests.
+}
+
 
 void setup()
 
@@ -55,60 +109,4 @@ void loop()                                                         //our main p
       
     }
   }
-}
-
-/******************************************************************************************************************************************************************************************
-* Name: sendData
-* Description: this Function regulates how the AT Commands will ge sent to the ESP8266.
-* 
-* Params: command - the AT Command to send 
-*                 - timeout - the time to wait for a response 
-*                 - debug - print to Serial window?(true = yes, false = no)
-*                 
-* Returns: The response from the esp8266 (if there is a reponse)
-*/
-String sendData(String command, const int timeout, boolean debug)
-{
-    String response = "";                                             //initialize a String variable named "response". we will use it later.
-    
-    esp8266.print(command);                                           //send the AT command to the esp8266 (from ARDUINO to ESP8266).
-    long int time = millis();                                         //get the operating time at this specific moment and save it inside the "time" variable.
-    while( (time+timeout) > millis())                                 //excute only whitin 1 second.
-    {      
-      while(esp8266.available())                                      //is there any response came from the ESP8266 and saved in the Arduino input buffer?
-      {
-        char c = esp8266.read();                                      //if yes, read the next character from the input buffer and save it in the "response" String variable.
-        response+=c;                                                  //append the next character to the response variabl. at the end we will get a string(array of characters) contains the response.
-      }  
-    }    
-    if(debug)                                                         //if the "debug" variable value is TRUE, print the response on the Serial monitor.
-    {
-      Serial.print(response);
-    }    
-    return response;                                                  //return the String response.
-}
-
-
-
-/******************************************************************************************************************************************************************************************
-* Name: InitWifiModule
-* Description: this Function gives the commands that we need to send to the sendData() function to send it.
-* 
-* Params: Nothing.
-*                 
-* Returns: Nothing (void).
-*/
-void InitWifiModule()
-{
-  sendData("AT+RST\r\n", 2000, DEBUG);                                                  //reset the ESP8266 module.
-  //delay(1000);
-  sendData("AT+CWJAP=\"Decoder\",\"1241997GoGo\"\r\n", 2000, DEBUG);        //connect to the WiFi network.
-  delay (3000);
-  sendData("AT+CWMODE=1\r\n", 1500, DEBUG);                                             //set the ESP8266 WiFi mode to station mode.
-  delay (1500);
-  sendData("AT+CIFSR\r\n", 1500, DEBUG);                                                //Show IP Address, and the MAC Address.
-  delay (1500);
-  sendData("AT+CIPMUX=1\r\n", 1500, DEBUG);                                             //Multiple conections.
-  delay (1500);
-  sendData("AT+CIPSERVER=1,80\r\n", 1500, DEBUG);                                       //start the communication at port 80, port 80 used to communicate with the web servers through the http requests.
 }
