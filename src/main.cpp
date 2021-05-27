@@ -69,7 +69,11 @@ void setup()
 {
   pinMode(redLED,OUTPUT);                           //set the pin number 12 as an output pin.
   pinMode(blueLED,OUTPUT);                          //set the pin number 11 as an output pin.
-  
+
+  digitalWrite(redLED,HIGH);                         //turn the red LED off at the beginning of the program.
+  digitalWrite(blueLED,HIGH);                       //turn the blue LED on at the beginning of the program.
+  delay(3000);
+
   digitalWrite(redLED,LOW);                         //turn the red LED off at the beginning of the program.
   digitalWrite(blueLED,HIGH);                       //turn the blue LED on at the beginning of the program.
 
